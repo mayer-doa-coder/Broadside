@@ -1,0 +1,15 @@
+# CMake build output
+build/
+
+# Visual Studio / VS Code local state
+.vs/
+*.user
+CMakeUserPresets.json
+
+# Compiled artifacts
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.lib
+!external/glfw/lib-vc2022/*.lib

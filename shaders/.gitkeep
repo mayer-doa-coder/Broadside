@@ -1,0 +1,2 @@
+Placeholder so CMake's POST_BUILD copy_directory step has a source directory.
+Phase 2 replaces this with phong.vert and phong.frag.
