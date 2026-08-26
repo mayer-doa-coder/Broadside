@@ -94,6 +94,7 @@ broadside/
 | `glfwInit`, window hints, render loop, `glfwGetTime()` clock, input polling | `src/main.cpp` |
 | Shader compile/link, compile-log checking, `setMat4`/`setVec3`/`setFloat`/`setInt` | `src/Shader.h` |
 | `struct Vertex { vec3 position; vec3 normal; }`, `class Mesh { VAO, VBO, EBO }`, `makeCube` / `makeCylinder` / `makeSphere` / `makeQuad` / `makeGrid` / `makeCone` / `makeRing`, `computeSmoothNormals` | `src/Mesh.h` |
+| The one shared copy of `computeLighting` + the light/material uniform block, spliced into both stages at load time (GLSL has no `#include`) | `src/Lighting.h` |
 | Orbit camera (spherical coords), view matrix, mouse drag → yaw/pitch, scroll → radius | `src/Camera.h` |
 | `struct Material`, material constants, `drawShip()`, aim solver, `Projectile`, particle pools, CPU wave functions | `src/Scene.h` |
 | Illumination equation, wave displacement, shading-mode branch | `shaders/phong.vert`, `shaders/phong.frag` |
@@ -246,9 +247,9 @@ There is no test framework. Each phase ends with a **✅ DONE WHEN** checkpoint 
 | 1 | **✅ DONE** | Loop runs at a steady framerate; `dt` prints ~0.016 at 60 FPS |
 | 2 | **✅ DONE** | Coloured triangle appears; a deliberate shader typo prints a readable compile error |
 | 3 | **✅ DONE** | Camera orbits a cube in 3D; no stretching, sane near/far clipping |
-| 4 | ← next | Sphere, cylinder, cube render as solid silhouettes; segment counts visibly change polygon count in wireframe |
-| **5 🎯 M1** |  | Brass sphere under one directional light: bright side, dark side, and a **specular highlight that moves as you orbit**. `1`/`2`/`3` give three visibly different results |
-| 6 |  | Brass / Polished Silver / Sailcloth spheres side by side look clearly different |
+| 4 | **✅ DONE** | Sphere, cylinder, cube render as solid silhouettes; segment counts visibly change polygon count in wireframe |
+| **5 🎯 M1** | **✅ DONE** | Brass sphere under one directional light: bright side, dark side, and a **specular highlight that moves as you orbit**. `1`/`2`/`3` give three visibly different results |
+| 6 | ← next | Brass / Polished Silver / Sailcloth spheres side by side look clearly different |
 | 7 |  | Ship looks like a ship; hardcoding `shipMatrix = rotate(45°)` carries masts, sails, cannon, and barrel with it |
 | **8 🎯 M2** |  | Ocean ripples, ship rides it convincingly, specular sun-streak glitters on the moving water |
 | 9 |  | Sails and flag move independently; the scene has life with no shot fired |

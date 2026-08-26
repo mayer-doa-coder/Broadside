@@ -55,13 +55,24 @@ public:
 
     // Compiles both stages and links them. On any failure it prints the reason,
     // leaves the object invalid, and returns false — it never half-succeeds.
-    bool loadFromFiles(const std::string& vertPath, const std::string& fragPath)
+    //
+    // `common` is GLSL spliced into BOTH stages just after their #version line.
+    // Phase 5 uses it for the one shared copy of the illumination model: GLSL has
+    // no #include, and two drifting copies of computeLighting would quietly make
+    // the Gouraud-vs-Phong comparison unfair (guide 5.2, implementation note).
+    bool loadFromFiles(const std::string& vertPath, const std::string& fragPath,
+                       const std::string& common = std::string())
     {
         destroy();
 
         std::string vertSrc, fragSrc;
         if (!readFile(vertPath, vertSrc)) return false;
         if (!readFile(fragPath, fragSrc)) return false;
+
+        if (!common.empty()) {
+            vertSrc = spliceAfterVersion(vertSrc, common, vertPath);
+            fragSrc = spliceAfterVersion(fragSrc, common, fragPath);
+        }
 
         const GLuint vs = compileStage(GL_VERTEX_SHADER, vertSrc, vertPath);
         if (vs == 0) return false;
@@ -114,6 +125,13 @@ public:
         glUniform3fv(glGetUniformLocation(id, name), 1, glm::value_ptr(value));
     }
 
+    // Phase 5: the normal matrix is a mat3, not a mat4. Sending it as a mat4 would
+    // let the model matrix's translation column leak into a direction.
+    void setMat3(const char* name, const glm::mat3& value) const
+    {
+        glUniformMatrix3fv(glGetUniformLocation(id, name), 1, GL_FALSE, glm::value_ptr(value));
+    }
+
     void setMat4(const char* name, const glm::mat4& value) const
     {
         glUniformMatrix4fv(glGetUniformLocation(id, name), 1, GL_FALSE, glm::value_ptr(value));
@@ -142,6 +160,34 @@ private:
             return false;
         }
         return true;
+    }
+
+    // Inserts `common` immediately after the #version directive, which the GLSL
+    // spec requires to be the first thing in a shader — prepending ahead of it is
+    // a compile error, so the block cannot simply be concatenated on the front.
+    //
+    // A #line directive is emitted afterwards so the driver keeps reporting errors
+    // against the real line numbers in the .vert / .frag file. Without it every
+    // compile error would be off by the length of the shared block, which is
+    // exactly the kind of silent papercut Phase 2 set out to avoid.
+    static std::string spliceAfterVersion(const std::string& source,
+                                          const std::string& common,
+                                          const std::string& label)
+    {
+        const size_t versionAt = source.find("#version");
+        if (versionAt == std::string::npos) {
+            std::fprintf(stderr,
+                "[shader] '%s' has no #version directive; prepending the shared block anyway\n",
+                label.c_str());
+            return common + source;
+        }
+
+        size_t lineEnd = source.find('\n', versionAt);
+        if (lineEnd == std::string::npos) lineEnd = source.size();
+        else                              ++lineEnd;          // keep the newline
+
+        // The #version line is line 1, so the file body resumes at line 2.
+        return source.substr(0, lineEnd) + common + "\n#line 2\n" + source.substr(lineEnd);
     }
 
     static GLuint compileStage(GLenum type, const std::string& source, const std::string& label)

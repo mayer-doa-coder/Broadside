@@ -49,7 +49,7 @@ struct OrbitCamera {
     // re-derives it instead of stretching the image.
     glm::mat4 projection(int framebufferWidth, int framebufferHeight) const
     {
-        const float aspect = (framebufferHeight > 0)
+        const float aspect = (framebufferWidth > 0 && framebufferHeight > 0)
                            ? (float)framebufferWidth / (float)framebufferHeight
                            : 1.0f;
         return glm::perspective(glm::radians(fovDeg), aspect, nearZ, farZ);

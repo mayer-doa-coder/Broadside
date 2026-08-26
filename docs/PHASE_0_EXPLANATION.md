@@ -4,87 +4,64 @@
 
 Phase 0 is complete.
 
-The project can build and open a basic OpenGL window. The window has a solid blue-grey background. Pressing `ESC` closes it safely.
+Later phases added shapes and lighting. The basic window and tool setup from Phase 0 are still working.
 
-## Purpose of Phase 0
+## Goal
 
-Phase 0 prepares the tools and the project folder. It does not draw ships, waves, or other 3D objects yet.
+The goal was simple: build the program, open an OpenGL window, show a clear colour, and close safely.
 
-This phase proves that these parts work together:
+## Main Tools
 
-- Visual Studio Code
-- MSVC Build Tools 2022
-- CMake
-- OpenGL 3.3 Core
-- GLFW 3.5.1
-- GLAD for OpenGL 3.3 Core
-- GLM 1.0.3
-- C++17
+| Tool | Job |
+|---|---|
+| CMake | Creates the build files |
+| MSVC | Compiles the C++ code on Windows |
+| GLFW | Creates the window and reads input |
+| GLAD | Loads OpenGL functions |
+| GLM | Provides vector and matrix maths |
+| OpenGL 3.3 Core | Draws the scene |
 
-## Important Files
+Only GLFW, GLAD, GLM, OpenGL, and the C++ standard library are used. No game engine or physics library is used.
 
-- `CMakeLists.txt` tells CMake how to build the program.
-- `src/main.cpp` creates the window and runs the basic loop.
-- `src/glad.c` loads OpenGL functions.
-- `include/` contains the GLAD headers.
-- `external/glfw/` contains GLFW for the window and keyboard input.
-- `external/glm/` contains the math library for later phases.
-- `.vscode/` contains the VS Code build, run, debug, and extension settings.
-- `shaders/` is ready for shader files. The real shaders are added in Phase 2.
+## Startup Order
 
-## What the Program Does
-
-The program follows these simple steps:
+The program starts in this order:
 
 1. Start GLFW.
-2. Ask for OpenGL 3.3 Core.
+2. Request OpenGL 3.3 Core.
 3. Create a `1280 x 720` window named `Broadside`.
-4. Load the OpenGL functions with GLAD.
-5. Print the OpenGL, GLSL, and graphics card information.
-6. Clear the window with one solid colour every frame.
-7. Check the keyboard and window events.
-8. Close the window when `ESC` is pressed.
-9. Destroy the window and stop GLFW.
+4. Make the OpenGL context active.
+5. Load OpenGL functions with GLAD.
+6. Set the viewport and OpenGL options.
+7. Run the main loop.
+8. Delete OpenGL resources before closing the context.
 
-## How to Build and Run
+This order matters. OpenGL functions cannot be used before GLAD is ready.
 
-In Visual Studio Code:
+## Build and Run
 
-1. Open the `Broadside` folder.
-2. Select the `Visual Studio Build Tools 2022 - amd64` kit.
-3. Run `CMake: Configure` from the Command Palette.
-4. Press `F7` to build.
-5. Press `Shift+F5` to run.
-6. Press `ESC` to close the window.
-
-You can also use the terminal:
+From a terminal:
 
 ```powershell
-cmake -S . -B build
+cmake -S . -B build -A x64
 cmake --build build --config Release
 ```
 
-If `cmake` is not found just after installation, close and reopen Visual Studio Code or the terminal. This reloads the system `PATH`.
+The VS Code CMake settings also use the correct executable folder as the working folder. This lets the program find its shader files.
 
-## Validation Result
+## Checks That Passed
 
-The following checks passed on Windows:
+- CMake configured with the x64 MSVC compiler.
+- Debug and Release builds completed.
+- The window opened at `1280 x 720`.
+- OpenGL 3.3 and GLSL 3.30 were reported.
+- A blue-grey clear colour was visible.
+- `ESC` closed the program.
+- The program exited with code `0`.
+- No forbidden dependency was found.
 
-| Check | Result |
-|---|---|
-| CMake configuration with the x64 MSVC compiler | Passed |
-| Debug build | Passed |
-| Release build | Passed |
-| OpenGL 3.3 Core window opens | Passed |
-| Window title is `Broadside` | Passed |
-| Solid clear colour is visible | Passed |
-| `ESC` closes the program | Passed |
-| Program exits with code `0` | Passed |
-| Required VS Code settings are valid | Passed |
-| Only the allowed libraries are used | Passed |
+The Debug build prints one `LNK4098` warning from the supplied GLFW library. It is not a project source error. The Release build is clean.
 
-The program reported OpenGL 3.3, GLSL 3.30, and an NVIDIA GeForce RTX 5050 Laptop GPU during the validation.
+## Result
 
-## What Comes Next
-
-Phase 1 adds time values, frame timing, input functions, depth testing, and back-face culling. Those features are not part of Phase 0.
+The Phase 0 checkpoint is passed. The project has a working OpenGL toolchain and window.

@@ -387,7 +387,7 @@ int main() {
 
 **Goal:** get GLSL compiling and a triangle on screen.
 
-> **✅ Checkpoint passed.** `src/Shader.h` compiles and links `shaders/phong.vert` and `shaders/phong.frag`, checks both logs, and draws a coloured triangle. Captured running frames change colour, while the paused triangle stays visually unchanged. Vertex errors, fragment errors, link errors, and missing files print clear messages and exit with code `-1`. All four uniform setters are used. Debug and Release build successfully, and the strict `/W4` source build is warning-free. See [PHASE_2_EXPLANATION.md](PHASE_2_EXPLANATION.md).
+> **✅ Checkpoint passed.** The original coloured triangle has been replaced by later-phase meshes, as expected. Its shader system remains in `src/Shader.h`: the current Phase 5 shaders compile and link, and focused tests confirmed readable vertex-compile, fragment-compile, link, and missing-file errors. Every failed load leaves no invalid program behind. Debug, Release, and strict `/W4` builds pass. See [PHASE_2_EXPLANATION.md](PHASE_2_EXPLANATION.md).
 
 Write a minimal `Shader` class: read the `.vert`/`.frag` files, `glCreateShader`, `glCompileShader`, **check the compile log** (do this from day one — silent shader failures will cost you hours), `glCreateProgram`, `glLinkProgram`, and helper setters (`setMat4`, `setVec3`, `setFloat`, `setInt`).
 
@@ -399,7 +399,7 @@ Write a minimal `Shader` class: read the `.vert`/`.frag` files, `glCreateShader`
 
 **Goal:** a 3D perspective view you can orbit.
 
-> **✅ Checkpoint passed.** `src/Camera.h` holds a spherical orbit camera (radius / yaw / pitch) with drag, wheel and W/S zoom. Verified against the perspective formula by framebuffer readback at seven camera settings: the face-on cube measures exactly 248x248 px in a 16:9 window (predicted 248.3) and 310x310 after a live resize to 600x900 (predicted 310.4), so there is no stretching. Pitch clamps at 89°, radius at 1.2, the press-latch prevents view snap, and the camera keeps working while `P` is paused. See [PHASE_3_EXPLANATION.md](PHASE_3_EXPLANATION.md).
+> **✅ Checkpoint passed.** `src/Camera.h` has a spherical orbit camera with radius, yaw, and pitch. A live audit verified click-to-drag latching, mouse orbit, wheel and W/S zoom, the 89° pitch limit, the 1.2 to 120 radius limits, camera input while paused, and correct wide and portrait framebuffer sizes. Debug, Release, and strict `/W4` builds pass. See [PHASE_3_EXPLANATION.md](PHASE_3_EXPLANATION.md).
 
 ```cpp
 glm::mat4 projection = glm::perspective(glm::radians(45.0f),
@@ -414,9 +414,11 @@ Implement an **orbit camera**: keep `radius`, `yaw`, `pitch`; compute position w
 
 ---
 
-# PHASE 4 — Mesh Library (Do This Properly Once)
+# PHASE 4 — Mesh Library (Do This Properly Once) ✅ COMPLETE
 
 **Goal:** generate all 8 primitives with **correct normals**, parameterised by tessellation.
+
+> **✅ Checkpoint passed.** `src/Mesh.h` has seven indexed, unit-sized generators that cover all eight PRD mesh roles because the HUD reuses the quad. A fresh OpenGL audit verified counts, bounds, normals, index ranges, non-zero triangles, winding, and minimum/default/maximum detail. The live gallery renders the required solid shapes and uses 214 triangles at minimum detail, 9,422 by default, and 37,262 at maximum detail in 7 draw calls. Two hundred rebuilds produced no OpenGL error. See [PHASE_4_EXPLANATION.md](PHASE_4_EXPLANATION.md).
 
 This phase is the foundation for everything. Do it carefully.
 
@@ -477,9 +479,11 @@ void computeSmoothNormals(std::vector<Vertex>& v,
 
 ---
 
-# PHASE 5 — 🎯 MILESTONE 1: The Phong Shader
+# PHASE 5 — 🎯 MILESTONE 1: The Phong Shader ✅ COMPLETE
 
 **Goal:** one lit object with a visible, moving specular highlight. **This is the heart of your grade — build it early and build it right.**
+
+> **✅ Checkpoint passed.** The project uses one program and one `uShadingMode` branch. `computeLighting` lives once in `src/Lighting.h` and is inserted into both shader stages. A fresh 234-check OpenGL audit found 0 failures: ambient, diffuse, specular, emission, point-light attenuation, mesh normals, and the inverse-transpose normal matrix were correct. The strongest sphere highlight moved 21 pixels after a camera orbit. Flat, Gouraud, and Phong differed by more than 17,000 pixels each in the focused test, and all three live keys changed the displayed result. See [PHASE_5_EXPLANATION.md](PHASE_5_EXPLANATION.md).
 
 ## 5.1 `phong.vert`
 
