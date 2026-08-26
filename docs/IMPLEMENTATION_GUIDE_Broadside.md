@@ -336,9 +336,11 @@ cmake --build build
 
 ---
 
-# PHASE 1 — The Render Loop Skeleton
+# PHASE 1 — The Render Loop Skeleton ✅ COMPLETE
 
 **Goal:** a correctly structured, continuously running loop (Requirement 3).
+
+> **✅ Checkpoint passed.** A five-minute test produced a steady v-synced frame time (`dt` 0.0068–0.0070 s, average 144.1 FPS). Pause, resume, resize, minimize, restore, and `ESC` all worked. The program exited with code 0 and printed no runtime errors. Depth testing and back-face culling are enabled. Debug and Release both build. Debug has one non-fatal `LNK4098` warning from the pre-built GLFW library; Release and the strict `/W4` source check are warning-free. See [PHASE_1_EXPLANATION.md](PHASE_1_EXPLANATION.md).
 
 ```cpp
 int main() {
@@ -381,9 +383,11 @@ int main() {
 
 ---
 
-# PHASE 2 — Shader Loading + First Triangle
+# PHASE 2 — Shader Loading + First Triangle ✅ COMPLETE
 
 **Goal:** get GLSL compiling and a triangle on screen.
+
+> **✅ Checkpoint passed.** `src/Shader.h` compiles and links `shaders/phong.vert` and `shaders/phong.frag`, checks both logs, and draws a coloured triangle. Captured running frames change colour, while the paused triangle stays visually unchanged. Vertex errors, fragment errors, link errors, and missing files print clear messages and exit with code `-1`. All four uniform setters are used. Debug and Release build successfully, and the strict `/W4` source build is warning-free. See [PHASE_2_EXPLANATION.md](PHASE_2_EXPLANATION.md).
 
 Write a minimal `Shader` class: read the `.vert`/`.frag` files, `glCreateShader`, `glCompileShader`, **check the compile log** (do this from day one — silent shader failures will cost you hours), `glCreateProgram`, `glLinkProgram`, and helper setters (`setMat4`, `setVec3`, `setFloat`, `setInt`).
 
@@ -391,9 +395,11 @@ Write a minimal `Shader` class: read the `.vert`/`.frag` files, `glCreateShader`
 
 ---
 
-# PHASE 3 — Camera + MVP Matrices
+# PHASE 3 — Camera + MVP Matrices ✅ COMPLETE
 
 **Goal:** a 3D perspective view you can orbit.
+
+> **✅ Checkpoint passed.** `src/Camera.h` holds a spherical orbit camera (radius / yaw / pitch) with drag, wheel and W/S zoom. Verified against the perspective formula by framebuffer readback at seven camera settings: the face-on cube measures exactly 248x248 px in a 16:9 window (predicted 248.3) and 310x310 after a live resize to 600x900 (predicted 310.4), so there is no stretching. Pitch clamps at 89°, radius at 1.2, the press-latch prevents view snap, and the camera keeps working while `P` is paused. See [PHASE_3_EXPLANATION.md](PHASE_3_EXPLANATION.md).
 
 ```cpp
 glm::mat4 projection = glm::perspective(glm::radians(45.0f),
