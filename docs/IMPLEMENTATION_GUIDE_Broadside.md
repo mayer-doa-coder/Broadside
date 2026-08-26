@@ -625,9 +625,11 @@ Compute this **on the CPU, once per object per frame**. It keeps normals correct
 
 ---
 
-# PHASE 6 — Materials and the Second Light
+# PHASE 6 — Materials and the Second Light ✅ COMPLETE
 
 **Goal:** satisfy L8's material table and multi-light requirements.
+
+> **✅ Checkpoint passed.** `src/Material.h` contains all seven required materials. The shader has exactly two light slots and sums the directional sun with the muzzle point light. The point light uses the required attenuation values. Shared data is sent once per frame, while material data changes per object. The live scene clearly separates warm brass, sharp silver, dull sailcloth, wood, ocean, black plastic, and emission. Debug, Release, and strict warning-as-error builds pass. The shared Phase 6 and 7 audit passed 115 checks with no failures. See [PHASE_6_EXPLANATION.md](PHASE_6_EXPLANATION.md).
 
 ```cpp
 struct Material {
@@ -666,9 +668,11 @@ Set up the two lights from PRD §11.1. Hoist view/projection/light uniforms **ou
 
 ---
 
-# PHASE 7 — Static Ship Hierarchy (No Animation Yet)
+# PHASE 7 — Static Ship Hierarchy (No Animation Yet) ✅ COMPLETE
 
 **Goal:** build the transform chain and verify it before adding motion.
+
+> **✅ Checkpoint passed.** The ship uses two parent-child chains with one root: the cannon chain and the rigging chain. All ten stored frames contain position and rotation only; scale is applied only when a mesh is drawn. The flag now follows the main yard exactly as required by the PRD. The audit confirmed every offset, the two cannon axes, muzzle position and direction, and a 45° root rotation that carries every child. The project has 7 unique meshes; the live scene uses 15 draw calls and 10,026 triangles. The shared Phase 6 and 7 audit passed 115 checks with no failures. See [PHASE_7_EXPLANATION.md](PHASE_7_EXPLANATION.md).
 
 ```cpp
 void drawShip(const glm::mat4& shipMatrix, float t) {
@@ -700,9 +704,11 @@ void drawShip(const glm::mat4& shipMatrix, float t) {
 
 ---
 
-# PHASE 8 — 🎯 MILESTONE 2: Ocean Waves + Ship Rocking
+# PHASE 8 — 🎯 MILESTONE 2: Ocean Waves + Ship Rocking ✅ COMPLETE
 
 **Goal:** a living sea and a ship that responds to it.
+
+> **✅ Checkpoint passed.** Milestone 2 is reached. The vertex shader moves the ocean and calculates analytic normals. The CPU samples the same wave to control ship heave, roll, and pitch. Each of the seven wave numbers is written once in [../src/Wave.h](../src/Wave.h) and generates both the C++ value and the GLSL text, so the two sides cannot drift. A focused audit passed 32,719 checks with no failures, including slopes, normals, amplitude, deterministic time, 81 ship poses, hierarchy inheritance, muzzle direction, and the `H` branch. Live tests confirmed moving water geometry, a changing specular reflection, ship rocking, `HIER ON/OFF`, pause/resume, 15 draw calls, 10,026 triangles, and a clean exit. Debug, Release, and strict warning-as-error builds pass. See [PHASE_8_EXPLANATION.md](PHASE_8_EXPLANATION.md).
 
 ## 8.1 Wave in the Vertex Shader (GPU-side — optimization)
 

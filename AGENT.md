@@ -76,8 +76,11 @@ broadside/
 │   ├── main.cpp          # render loop, input, orchestration
 │   ├── Shader.h          # GLSL load/compile/link + uniform setters
 │   ├── Mesh.h            # Vertex struct, Mesh class, primitive generators
+│   ├── Lighting.h        # the one shared copy of the GLSL illumination model
+│   ├── Wave.h            # the sea surface: CPU and GLSL copies, side by side
+│   ├── Material.h        # struct Material + the L8 slide-60 material table
 │   ├── Camera.h          # orbit camera (radius, yaw, pitch)
-│   └── Scene.h           # scene graph, materials, ship/cannon/ballistics
+│   └── Scene.h           # aim solver, ballistics, particles (later phases)
 ├── shaders/
 │   ├── phong.vert
 │   └── phong.frag
@@ -95,8 +98,11 @@ broadside/
 | Shader compile/link, compile-log checking, `setMat4`/`setVec3`/`setFloat`/`setInt` | `src/Shader.h` |
 | `struct Vertex { vec3 position; vec3 normal; }`, `class Mesh { VAO, VBO, EBO }`, `makeCube` / `makeCylinder` / `makeSphere` / `makeQuad` / `makeGrid` / `makeCone` / `makeRing`, `computeSmoothNormals` | `src/Mesh.h` |
 | The one shared copy of `computeLighting` + the light/material uniform block, spliced into both stages at load time (GLSL has no `#include`) | `src/Lighting.h` |
+| `waveHeight` / `waveSlopeX` / `waveSlopeZ` + matching `oceanSurface` GLSL — one set of seven literals generates both CPU values and shader text | `src/Wave.h` |
 | Orbit camera (spherical coords), view matrix, mouse drag → yaw/pitch, scroll → radius | `src/Camera.h` |
-| `struct Material`, material constants, `drawShip()`, aim solver, `Projectile`, particle pools, CPU wave functions | `src/Scene.h` |
+| `struct Material` and the L8 slide-60 material constants | `src/Material.h` |
+| `ShipFrames`, `buildShipFrames()`, `drawShip()`, `drawRig()` — the transform hierarchy | `src/main.cpp` |
+| Aim solver, `Projectile`, particle pools | `src/Scene.h` |
 | Illumination equation, wave displacement, shading-mode branch | `shaders/phong.vert`, `shaders/phong.frag` |
 
 ### Scene graph — the architecture that matters most
@@ -249,10 +255,10 @@ There is no test framework. Each phase ends with a **✅ DONE WHEN** checkpoint 
 | 3 | **✅ DONE** | Camera orbits a cube in 3D; no stretching, sane near/far clipping |
 | 4 | **✅ DONE** | Sphere, cylinder, cube render as solid silhouettes; segment counts visibly change polygon count in wireframe |
 | **5 🎯 M1** | **✅ DONE** | Brass sphere under one directional light: bright side, dark side, and a **specular highlight that moves as you orbit**. `1`/`2`/`3` give three visibly different results |
-| 6 | ← next | Brass / Polished Silver / Sailcloth spheres side by side look clearly different |
-| 7 |  | Ship looks like a ship; hardcoding `shipMatrix = rotate(45°)` carries masts, sails, cannon, and barrel with it |
-| **8 🎯 M2** |  | Ocean ripples, ship rides it convincingly, specular sun-streak glitters on the moving water |
-| 9 |  | Sails and flag move independently; the scene has life with no shot fired |
+| 6 | **✅ DONE** | Brass / Polished Silver / Sailcloth spheres side by side look clearly different |
+| 7 | **✅ DONE** | Ship looks like a ship; hardcoding `shipMatrix = rotate(45°)` carries masts, sails, cannon, and barrel with it |
+| **8 🎯 M2** | **✅ DONE** | Ocean ripples, ship rides it convincingly, specular sun-streak glitters on the moving water |
+| 9 | ← next | Sails and flag move independently; the scene has life with no shot fired |
 | 10 |  | Two ships, both rocking correctly, one patrolling laterally |
 | 11 |  | Cannon smoothly tracks the enemy; manual mode responds to arrow keys |
 | **12 🎯 M3** |  | SPACE launches a ball that visibly arcs under gravity along the barrel's true direction; firing at different roll points produces different trajectories |

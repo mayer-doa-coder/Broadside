@@ -81,7 +81,7 @@ Getting this backwards makes the ball fly toward the world origin instead of alo
 
 `A1 = 0.22, K1 = 0.55, W1 = 1.1, A2 = 0.14, K2 = 0.85, W2 = 1.7, phase = 1.3`.
 
-The ship rocks *because of* the wave under it — that physical consistency is a small detail graders notice. If you edit one side, edit the other in the same change.
+The ship rocks *because of* the wave under it — that physical consistency is a small detail graders notice. The seven literals in `src/Wave.h` generate both the C++ constants and GLSL text, so update that one list only.
 
 ### 🚫 Two lights. Not one, not three.
 

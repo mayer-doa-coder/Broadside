@@ -1,12 +1,15 @@
 #version 330 core
 
-// Broadside — Phase 5 vertex stage.
+// Broadside — vertex stage.
+// Phase 5: the illumination model, evaluated here in Gouraud mode.
+// Phase 8: the ocean displacement, computed on the GPU.
 //
-// NOTE: this file is not standalone GLSL. src/Shader.h splices the shared
-// lighting block (src/Lighting.h) in immediately after the #version line above,
-// so `computeLighting`, `struct Light` and every material/light uniform are
-// already declared by the time this file's own code begins. GLSL has no
-// #include; that splice IS the include (guide 5.2, implementation note).
+// NOTE: this file is not standalone GLSL. src/Shader.h splices two shared blocks
+// in immediately after the #version line above — the lighting model
+// (src/Lighting.h) and the wave surface (src/Wave.h) — so `computeLighting`,
+// `oceanSurface`, `struct Light`, `uIsOcean`, `uTime` and every material/light
+// uniform are already declared by the time this file's own code begins. GLSL has
+// no #include; that splice IS the include (guide 5.2, implementation note).
 
 // Matches Mesh.h exactly: every indexed vertex is a position and a normal.
 layout (location = 0) in vec3 aPos;
@@ -30,8 +33,24 @@ out vec3 vGouraudColor;
 
 void main()
 {
-    vFragPos = vec3(uModel * vec4(aPos, 1.0));   // w = 1: this is a POSITION
-    vNormal  = uNormalMatrix * aNormal;          // mat3: directions carry no translation
+    vec3 worldPos = vec3(uModel * vec4(aPos, 1.0));   // w = 1: this is a POSITION
+    vec3 worldNrm = uNormalMatrix * aNormal;          // mat3: directions carry no translation
+
+    // ---- OCEAN: displace the surface here, on the GPU (PRD 14) ----
+    // The vertex buffer is never touched and nothing is re-uploaded: the grid is
+    // uploaded flat, once, and every frame of sea after that costs two sines per
+    // vertex on hardware built for exactly that. Zero per-frame CPU work, zero
+    // bandwidth — this is the single largest optimization in the project.
+    //
+    // oceanSurface OVERWRITES worldNrm rather than feeding into it, and that is
+    // deliberate. The analytic normal it returns is already in WORLD space, so
+    // pushing it through uNormalMatrix a second time would tilt it by the ocean's
+    // 48x scale and land the sun-streak in the wrong place.
+    if (uIsOcean == 1)
+        worldPos = oceanSurface(worldPos, worldNrm);
+
+    vFragPos = worldPos;
+    vNormal  = worldNrm;
 
     // Always written, even in the modes that ignore it. Leaving a varying
     // undefined on some paths is the kind of thing that works on one driver and
