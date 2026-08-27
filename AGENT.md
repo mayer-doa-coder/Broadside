@@ -258,14 +258,14 @@ There is no test framework. Each phase ends with a **✅ DONE WHEN** checkpoint 
 | 6 | **✅ DONE** | Brass / Polished Silver / Sailcloth spheres side by side look clearly different |
 | 7 | **✅ DONE** | Ship looks like a ship; hardcoding `shipMatrix = rotate(45°)` carries masts, sails, cannon, and barrel with it |
 | **8 🎯 M2** | **✅ DONE** | Ocean ripples, ship rides it convincingly, specular sun-streak glitters on the moving water |
-| 9 | ← next | Sails and flag move independently; the scene has life with no shot fired |
-| 10 |  | Two ships, both rocking correctly, one patrolling laterally |
-| 11 |  | Cannon smoothly tracks the enemy; manual mode responds to arrow keys |
-| **12 🎯 M3** |  | SPACE launches a ball that visibly arcs under gravity along the barrel's true direction; firing at different roll points produces different trajectories |
-| 13 |  | Good aim → HIT, short aim → SPLASH, HUD reports which |
-| 14 |  | Repeated firing produces smoke and splashes; 50 shots never allocate or break |
-| **15 🎯 M4** |  | The entire 3-minute demo script (PRD §16.2) runs without touching code |
-| 16 |  | A grader can read the current shading mode and aim angles without asking |
+| 9 | **✅ DONE** | Sails and flag move independently; the scene has life with no shot fired |
+| 10 | **✅ DONE** | Two ships, both rocking correctly, one patrolling laterally |
+| 11 | **✅ DONE** | Cannon smoothly tracks the enemy; manual mode responds to arrow keys |
+| **12 🎯 M3** | **✅ DONE** | SPACE launches a ball that visibly arcs under gravity along the barrel's true direction; firing at different roll points produces different trajectories |
+| 13 | **✅ DONE** | Good aim → HIT, short aim → SPLASH, HUD reports which |
+| 14 | **✅ DONE** | Repeated firing produces smoke and splashes; 50 shots never allocate or break |
+| **15 🎯 M4** | **✅ DONE** | The entire 3-minute demo script (PRD §16.2) runs without touching code |
+| 16 | ← next | A grader can read the current shading mode and aim angles without asking |
 | 17 |  | Optimization checklist measured and recorded |
 
 **The project is submittable at M3 (Phase 12).** Everything after that raises the grade; M3 already meets every mandatory requirement except the shading-comparison bonus.

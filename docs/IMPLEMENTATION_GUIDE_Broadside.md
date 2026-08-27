@@ -762,9 +762,11 @@ glm::mat4 shipMatrix(glm::vec3 pos, float t, bool hierarchyEnabled) {
 
 ---
 
-# PHASE 9 — Idle Rigging Animation
+# PHASE 9 — Idle Rigging Animation ✅ COMPLETE
 
 **Goal:** continuous ambient motion so the scene is never static.
+
+> **✅ Checkpoint passed.** Both sails swing about their own yards with `R_z(A sin(wt + phi))` and the flag slews about the masthead with `R_y`, exactly as PRD §8 specifies. A 21-check audit found 0 failures on the first run. The three angles reproduce `A sin(wt + phi)` to 3e-08 over 540 samples; the two sails reach 0.163 rad (9.3°) apart and neither permanently leads (49% / 50%), so they are demonstrably not in lockstep. The flag uses a different speed from the sails, which makes the combined motion look less uniform. **This is also what completes the `H` demonstration:** with the hierarchy off the root is now bit-identical at all 239 sampled instants while the sails and flag keep moving at 237/239 and 238/239 — 17,660 pixels still change on a frozen hull. Requirement 12 holds: re-rendering t = 2.5 reproduces all 640,000 pixels. No new geometry — still 15 draw calls. See [PHASE_9_EXPLANATION.md](PHASE_9_EXPLANATION.md).
 
 ```cpp
 float sailFlutter = 0.10f * sinf(2.2f * t + phaseOffset);
@@ -777,9 +779,13 @@ Give each sail a different `phaseOffset` so they don't move in lockstep.
 
 ---
 
-# PHASE 10 — Enemy Ship on Patrol
+# PHASE 10 — Enemy Ship on Patrol ✅ COMPLETE
 
 **Goal:** a moving target. Reuse everything.
+
+> **✅ Checkpoint passed.** Two ships, both rocking, one patrolling. **Zero new meshes and zero new geometry code** — the enemy is the same `drawShip()` under a different root, a `SHIP_REDUCED` detail level and one different hull material. A 25-check audit found 0 failures after one real fix. Both hulls are tilted at 429/429 sampled instants and tilted *differently* at 429/429, because the enemy samples the wave under its own moving position; their up-vectors diverge by up to 0.262. The reduced enemy is exactly 4 draws (hull, mast, yard, sail) against 13 for a full clone — the audit confirms a full clone would have put the frame at 28 and broken the ceiling. At the Phase 10 checkpoint the scene used **19 draw calls** and 10,296 triangles. See [PHASE_10_EXPLANATION.md](PHASE_10_EXPLANATION.md).
+>
+> **Budget update.** Phase 14 keeps the scene at 18 draws while idle and at most 20 during a flash, smoke trail, or splash. All active sphere particles share one instanced draw, and the splash ring uses the last available draw.
 
 ```cpp
 glm::vec3 enemyPos(float t) {
@@ -793,9 +799,13 @@ Call the **same** `drawShip()` with a different matrix, slightly different scale
 
 ---
 
-# PHASE 11 — Two-Axis Cannon Aiming
+# PHASE 11 — Two-Axis Cannon Aiming ✅ COMPLETE
 
 **Goal:** the gimbal (same technique as a radar dish mount).
+
+> **✅ Checkpoint passed.** The cannon tracks the patrolling enemy under a rate-limited slew, and `TAB` hands control to the arrow keys. A 28-check audit found 0 failures after one corrected assertion. The strongest result is in world space: while **both** ships roll, the barrel's world bearing stays within **0.97°** of the enemy and its world elevation within **0.47°** of target-plus-lift, across 49 samples of live tracking — with no compensation term anywhere, because the solution is computed in the ship's own frame. Freezing the target and letting only the hull rock still swings the gun **13.99°** in elevation; holding the hull level with `H` makes it settle and stop dead.
+>
+> ⚠️ **One correction to the guide's snippet.** `azimuth += clamp(targetAz - azimuth, ...)` is wrong for this scene. The enemy patrols across the player's stern, so the bearing crosses `atan2`'s branch cut on **every** pass — the audit counted 3 crossings in 36 s. Raw subtraction reads that 3° step as −357° and drives the turret almost all the way round the wrong way. The fix is to take the shortest signed angle: `wrapAngle(targetAz - azimuth)`. With it, the turret never exceeded **0.0921°** in a step against a 0.4167° limit. See [PHASE_11_EXPLANATION.md](PHASE_11_EXPLANATION.md).
 
 ```cpp
 void updateAim(float dt, const glm::mat4& shipM, glm::vec3 enemyWorld) {
@@ -805,11 +815,12 @@ void updateAim(float dt, const glm::mat4& shipM, glm::vec3 enemyWorld) {
         glm::vec3 d = glm::normalize(local - MOUNT_LOCAL_POS);
 
         float targetAz = atan2f(d.x, d.z);
-        float targetEl = asinf(glm::clamp(d.y, -1.0f, 1.0f)) + BALLISTIC_LIFT;
+        float targetEl = asinf(glm::clamp(d.y, -1.0f, 1.0f))
+                       + ballisticLift(glm::length(local - MOUNT_LOCAL_POS));
         targetEl = glm::clamp(targetEl, glm::radians(-5.0f), glm::radians(45.0f));
 
         // Rate-limited slew — makes the motion visibly mechanical
-        azimuth   += glm::clamp(targetAz - azimuth,   -SLEW*dt, SLEW*dt);
+        azimuth   += glm::clamp(wrapAngle(targetAz - azimuth), -SLEW*dt, SLEW*dt);
         elevation += glm::clamp(targetEl - elevation, -SLEW*dt, SLEW*dt);
     } else {
         if (keyLeft)  azimuth   -= SLEW * dt;
@@ -825,9 +836,13 @@ void updateAim(float dt, const glm::mat4& shipM, glm::vec3 enemyWorld) {
 
 ---
 
-# PHASE 12 — 🎯 MILESTONE 3: Ballistics (The Core)
+# PHASE 12 — 🎯 MILESTONE 3: Ballistics (The Core) ✅ COMPLETE
 
 **Goal:** fire a real projectile. **This is the phase that makes it *this* project.**
+
+> **✅ Checkpoint passed. Milestone 3 reached — the project is now submittable.** SPACE launches a ball that arcs under gravity along the barrel's true world direction. A 38-check audit found 0 failures after one assertion was made exact. `p0` agrees with the hierarchy's own muzzle point to **0.00e+00**, `|v0|` is exactly 42.0, and `p(τ)` matches `p0 + v0τ + ½gτ²` at 600 samples to **1.9e-05**. **The milestone claim, measured:** six shots fired across 1.9 s of hull roll left from six different muzzle points (0.048–0.317 units apart) along six different directions (0.57–2.47° apart), landing across a **4.98-unit spread on the water from the roll alone**. Stepping the same flight at 30 Hz and 300 Hz lands on the identical point. Draw calls now breathe: **18 idle, 19 in flight, 20 during the flash** — exactly at the ceiling, never over.
+>
+> ⚠️ **`BALLISTIC_LIFT` is now derived, not fixed.** Phase 11's placeholder 7° throws the ball **43 units** at a target 20 away. The low-arc solution `θ = ½·asin(gR/v²)` gives 2.9–3.7° across the engagement range, and is recomputed each frame because the enemy patrols across 28 units of frontage. A tracked shot now passes within **0.82 units** of the enemy hull centre after 0.49 s of flight. See [PHASE_12_EXPLANATION.md](PHASE_12_EXPLANATION.md).
 
 ## 12.1 Extract the Muzzle Transform From the Hierarchy
 
@@ -888,21 +903,29 @@ void updateProjectile(float now) {
 
 ---
 
-# PHASE 13 — Impact Resolution
+# PHASE 13 — Impact Resolution ✅ COMPLETE
+
+> **✅ Checkpoint passed.** A 32-check audit found 0 failures on the first run. Firing on the computed solution scores **HIT**; depressing the gun to its stop scores **SPLASH**; traversing 35° off misses. The struck hull glows over **937 px**, and the always-visible window-title status readout reports the verdict.
+>
+> ⚠️ **Two measured departures from the snippet.** (1) The hull test **sweeps the segment** the ball covered this frame rather than testing a point. At 42 m/s the ball moves 0.7 units per frame at 60 Hz and 1.4 at 30 Hz, while a grazing hit stays inside `HIT_RADIUS` for only **1.17 frames at 60 Hz and 0.58 at 30 Hz** — a point test misses those, and misses them *differently at different frame rates*. With the swept test, 30/60/144 Hz agree on the verdict at **16 of 16** firing instants. (2) The hull is tested **before** the sea: the enemy floats *on* the sea, so a shot arriving at hull height while the local wave crests is below the waterline and above the deck at once — the guide's order reports SPLASH for a shot that plainly struck the ship. See [PHASE_13_EXPLANATION.md](PHASE_13_EXPLANATION.md).
 
 ```cpp
-void checkImpact(float now) {
+void checkImpact(float now, glm::vec3 enemyWorld) {
     if (!ball.active) return;
+
+    // Sweep the distance travelled this frame so a fast ball cannot skip the hull.
+    // Test the hull first because it is sitting in the water.
+    if (segmentPointDistance(ballPrev, ballPos, enemyWorld) < HIT_RADIUS) {
+        spawnBurst(ballPos);
+        enemyFlashUntil = now + 0.4f;   // visual confirmation
+        lastResult = "HIT";
+        ball.active = false;
+        return;
+    }
 
     if (ballPos.y <= waveHeight(ballPos.x, ballPos.z, now)) {
         spawnSplash(ballPos);
         lastResult = "SPLASH";
-        ball.active = false;
-    }
-    else if (glm::distance(ballPos, enemyPos(now)) < HIT_RADIUS) {
-        spawnBurst(ballPos);
-        enemyFlashUntil = now + 0.4f;   // visual confirmation
-        lastResult = "HIT";
         ball.active = false;
     }
 }
@@ -914,14 +937,24 @@ The `enemyFlashUntil` timer briefly boosts the enemy hull's emission — a clear
 
 ---
 
-# PHASE 14 — Pooled Particles
+# PHASE 14 — Pooled Particles ✅ COMPLETE
 
 **Goal:** smoke and splash with zero per-frame allocation.
 
+> **✅ Checkpoint passed.** The project has four fixed smoke slots, four fixed impact slots, and one reusable splash ring. Firing spawns grey muzzle smoke, a water impact spawns blue spray and an expanding ring, and a hull hit spawns orange sparks beside the existing hull glow. A focused audit passed 68 checks with no failures, including a framebuffer visibility check and 50 rapid fire/update/render cycles with zero C++ allocations. The previous 292 Phase 9–13 checks still pass.
+>
+> **Budget solution.** Drawing every puff separately would exceed the 20-draw hard limit. The eight possible sphere particles therefore use one instanced draw. The ring uses one more. Particles stay pooled but are not drawn during the 0.15-second muzzle flash, and an older ring is not drawn while a new ball is flying. Every tested overlap stays at or below **20 draws** and **17,976 triangles**.
+
 ```cpp
-struct Particle { glm::vec3 origin, velocity; float age, life; bool active; };
+struct Particle {
+    glm::vec3 origin, velocity, emission;
+    float age, life, startSize, growth, spinRate;
+    bool active;
+};
+
 Particle smokePool[4];
 Particle splashPool[4];
+Particle splashRing;
 
 void updateParticles(float dt) {
     for (auto& p : smokePool) {
@@ -929,18 +962,21 @@ void updateParticles(float dt) {
         p.age += dt;
         if (p.age > p.life) { p.active = false; continue; }
     }
-    // identical for splashPool
+    // Repeat for splashPool and splashRing. The arrays never resize.
 }
 
-void drawParticle(const Particle& p) {
-    if (!p.active) return;
+void deriveParticle(const Particle& p) {
     float k = p.age / p.life;
     glm::vec3 pos   = p.origin + p.velocity * p.age;   // pure function of age
-    float     scale = 0.15f + 0.9f * k;
+    float     scale = p.startSize + p.growth * k;
     float     alpha = 1.0f - k;
-    // draw sphere with emission scaled by alpha
+    // T(pos) * R_y(spinRate * age) * S(scale)
 }
 ```
+
+`fire()` fills the smoke pool. `checkImpact()` fills the impact pool with blue spray for `SPLASH` or orange sparks for `HIT`. Slots whose age reaches their life become inactive and are reused by the next event.
+
+All active smoke and impact spheres are submitted together with `glDrawElementsInstanced`. Their transforms, emission colours, and alpha values come from fixed uniform arrays indexed by `gl_InstanceID`. No new mesh or particle buffer is created.
 
 Enable blending for particles only, then disable it again:
 ```cpp
@@ -954,9 +990,13 @@ glDepthMask(GL_TRUE); glDisable(GL_BLEND);
 
 ---
 
-# PHASE 15 — 🎯 MILESTONE 4: The Demonstration Suite
+# PHASE 15 — 🎯 MILESTONE 4: The Demonstration Suite ✅ COMPLETE
 
 **Goal:** the features that convert a nice scene into a high-scoring *Computer Graphics* project. **Do not skip this phase — this is where the marks are.**
+
+> **✅ Checkpoint passed. Milestone 4 reached.** Every PRD §10 demonstration control is live: `1`/`2`/`3`, `+`/`-`, `B`, `L`, `K`, `H`, `TAB`, the arrow keys, `SPACE`, camera orbit/zoom, and `P`. The title immediately reports shading, specular model, light mode, term mask, tessellation, hierarchy, aim mode, flight state, and shot result. The complete runtime sequence was performed without editing code and stayed at or below 20 draws.
+>
+> **The two money shots were measured in a hidden OpenGL framebuffer.** At an 8×8 ocean grid, Gouraud produced 0 bright highlight pixels while Phong recovered 427; 36,144 pixels changed between the views. On the six-segment brass barrel, Flat/Gouraud, Gouraud/Phong, and Flat/Phong differed by 3,736, 3,402, and 3,508 pixels. A focused Phase 15 audit passed all 34 checks. See [PHASE_15_EXPLANATION.md](PHASE_15_EXPLANATION.md).
 
 ## 15.1 Runtime Tessellation Control
 

@@ -27,14 +27,38 @@ uniform mat4 uProjection;
 // transformed normal off the true surface. This is the correction.
 uniform mat3 uNormalMatrix;
 
+// Phase 14: a fixed upper bound, matching smokePool[4] + splashPool[4].
+// Uniform arrays keep all active puffs in one sphere draw. There is no dynamic
+// buffer, allocation, or upload object created in the frame loop.
+const int MAX_PARTICLE_INSTANCES = 8;
+uniform int   uUseParticleInstances;
+uniform mat4  uParticleModels[MAX_PARTICLE_INSTANCES];
+uniform mat3  uParticleNormalMatrices[MAX_PARTICLE_INSTANCES];
+uniform vec3  uParticleEmission[MAX_PARTICLE_INSTANCES];
+uniform float uParticleAlpha[MAX_PARTICLE_INSTANCES];
+
 out vec3 vFragPos;
 out vec3 vNormal;
 out vec3 vGouraudColor;
+out vec3 vParticleEmission;
+out float vParticleAlpha;
 
 void main()
 {
-    vec3 worldPos = vec3(uModel * vec4(aPos, 1.0));   // w = 1: this is a POSITION
-    vec3 worldNrm = uNormalMatrix * aNormal;          // mat3: directions carry no translation
+    mat4 model = uModel;
+    mat3 normalMatrix = uNormalMatrix;
+    vParticleEmission = vec3(0.0);
+    vParticleAlpha = 1.0;
+
+    if (uUseParticleInstances == 1) {
+        model = uParticleModels[gl_InstanceID];
+        normalMatrix = uParticleNormalMatrices[gl_InstanceID];
+        vParticleEmission = uParticleEmission[gl_InstanceID];
+        vParticleAlpha = uParticleAlpha[gl_InstanceID];
+    }
+
+    vec3 worldPos = vec3(model * vec4(aPos, 1.0));   // w = 1: this is a POSITION
+    vec3 worldNrm = normalMatrix * aNormal;          // mat3: directions carry no translation
 
     // ---- OCEAN: displace the surface here, on the GPU (PRD 14) ----
     // The vertex buffer is never touched and nothing is re-uploaded: the grid is

@@ -15,6 +15,8 @@
 in vec3 vFragPos;
 in vec3 vNormal;
 in vec3 vGouraudColor;
+in vec3 vParticleEmission;
+in float vParticleAlpha;
 
 out vec4 FragColor;
 
@@ -48,5 +50,9 @@ void main()
         color = computeLighting(normalize(vNormal), vFragPos);
     }
 
-    FragColor = vec4(color, 1.0);
+    // Per-instance emission is separate from the shared Material struct because
+    // one instanced draw contains grey smoke, blue spray, or orange hit sparks.
+    // It is still the L8 emission term: self-visible, but not a third light.
+    color += vParticleEmission;
+    FragColor = vec4(color, vParticleAlpha);
 }

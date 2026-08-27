@@ -111,6 +111,21 @@ static const Material SAILCLOTH = {
     4.0f
 };
 
+// Enemy hull. The same timber as the player's, weathered colder and darker so
+// the two vessels read as different ships at 18 units without needing any new
+// geometry (guide Phase 10, "a different hull tint"). n_s stays at 8: it is the
+// same material, differently aged, and changing the exponent would quietly
+// change what the frame demonstrates about the n_s range.
+//
+// Tuned, not a slide-60 entry. Phase 13 raises its emission briefly on a hit.
+static const Material ENEMY_HULL = {
+    glm::vec3(0.07f, 0.07f, 0.08f),
+    glm::vec3(0.22f, 0.20f, 0.19f),
+    glm::vec3(0.15f, 0.14f, 0.13f),
+    glm::vec3(0.0f),
+    8.0f
+};
+
 // ---------------------------------------------------------------------------
 // Emissive — L8 slide 55
 // ---------------------------------------------------------------------------
@@ -128,5 +143,16 @@ static const Material MUZZLE_FLASH = {
     glm::vec3(0.0f),
     glm::vec3(0.0f),
     glm::vec3(1.0f, 0.7f, 0.3f),
+    1.0f
+};
+
+// Phase 14 particle batches supply emission per instance in the vertex shader.
+// The shared material is otherwise black, so smoke, spray and impact sparks stay
+// readable in every shading mode without pretending they are another light.
+static const Material PARTICLE_BASE = {
+    glm::vec3(0.0f),
+    glm::vec3(0.0f),
+    glm::vec3(0.0f),
+    glm::vec3(0.0f),
     1.0f
 };

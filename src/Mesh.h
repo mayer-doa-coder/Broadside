@@ -142,6 +142,19 @@ public:
         glBindVertexArray(0);
     }
 
+    // Phase 14 particle batches reuse the same indexed mesh several times in one
+    // draw call. Per-instance transforms and colours come from small uniform
+    // arrays indexed by gl_InstanceID, so no instance buffer is allocated or
+    // uploaded in the render loop.
+    void drawInstanced(int instanceCount) const
+    {
+        if (m_vao == 0 || instanceCount <= 0) return;
+        glBindVertexArray(m_vao);
+        glDrawElementsInstanced(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, 0,
+                                (GLsizei)instanceCount);
+        glBindVertexArray(0);
+    }
+
     int vertexCount()   const { return m_vertexCount; }
     int indexCount()    const { return (int)m_indexCount; }
     int triangleCount() const { return (int)m_indexCount / 3; }
